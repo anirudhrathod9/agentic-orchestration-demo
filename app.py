@@ -15,7 +15,11 @@ def get_api_key():
 
 API_KEY = get_api_key()
 BASE_URL = "https://api.groq.com/openai/v1"
-MODEL = "llama-3.1-70b-versatile"
+MODEL_OPTIONS = [
+    "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
+    "mixtral-8x7b-32768",
+]
 
 if not API_KEY:
     st.error("Missing GROQ_API_KEY. Add it in Streamlit Secrets (Cloud) or as an env var locally.")
