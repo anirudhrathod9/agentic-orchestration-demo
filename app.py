@@ -131,9 +131,9 @@ if run:
 
     with st.spinner("Running agents..."):
         t0 = time.time()
-        seq = run_sequential(question)
-        hier = run_hierarchical(question)
-        swm = run_swarm(question)
+        seq = run_sequential(model, question)
+        hier = run_hierarchical(model, question)
+        swm = run_swarm(model, question)
         t1 = time.time()
 
     st.success(f"Completed in {t1 - t0:.1f}s")
