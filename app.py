@@ -81,37 +81,39 @@ def run_sequential(model: str, question: str):
     ]
 
 def run_hierarchical(model: str, question: str):
-    e1 = call_llm(
+    expert1 = call_llm(
         model,
-        "You are Expert 1 (Culinary/Flavor logic). Evaluate in 5-7 bullets.",
+        "You are Expert 1 (Domain Expert). Clarify the context, key concepts, and the core decision criteria. 5-7 bullets.",
         question,
         temperature=0.5,
     )
-    e2 = call_llm(
+    expert2 = call_llm(
         model,
-        "You are Expert 2 (Culture/Tradition). Evaluate in 5-7 bullets.",
+        "You are Expert 2 (Risks & Constraints). Identify risks, assumptions, constraints, edge cases, and failure modes. 5-7 bullets.",
         question,
         temperature=0.5,
     )
-    e3 = call_llm(
+    expert3 = call_llm(
         model,
-        "You are Expert 3 (Consumer/Market view). Evaluate in 5-7 bullets.",
+        "You are Expert 3 (Stakeholders & Impact). Consider stakeholders, incentives, fairness/ethics, and practical adoption implications. 5-7 bullets.",
         question,
         temperature=0.5,
     )
 
-    mgr = call_llm(
+    manager = call_llm(
         model,
-        "You are the Manager Agent. Synthesize experts into ONE final answer (5-7 lines) + 2 key takeaways.",
-        f"Question:\n{question}\n\nExpert 1:\n{e1}\n\nExpert 2:\n{e2}\n\nExpert 3:\n{e3}",
+        "You are the Manager Agent. Synthesize the experts into ONE final recommendation (5-7 lines) + 2 key takeaways. Keep it actionable.",
+        f"Question:\n{question}\n\nDomain Expert:\n{expert1}\n\nRisks & Constraints:\n{expert2}\n\nStakeholders & Impact:\n{expert3}",
         temperature=0.4,
     )
+
     return [
-        ("Expert — Culinary/Flavor", e1),
-        ("Expert — Culture/Tradition", e2),
-        ("Expert — Market/Consumer", e3),
-        ("Manager — Final synthesis", mgr),
+        ("Expert — Domain", expert1),
+        ("Expert — Risks & Constraints", expert2),
+        ("Expert — Stakeholders & Impact", expert3),
+        ("Manager — Final synthesis", manager),
     ]
+
 
 def run_swarm(model: str, question: str):
     a = call_llm(
