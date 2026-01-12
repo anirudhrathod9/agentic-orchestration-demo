@@ -3,24 +3,44 @@ import time
 import streamlit as st
 from openai import OpenAI
 
-# -----------------------------
-# CONFIG
-# -----------------------------
+# =============================
+# PAGE CONFIG
+# =============================
 st.set_page_config(page_title="Agentic AI Orchestration Demo", layout="wide")
 
-def get_api_key():
+# =============================
+# KEYS / CLIENT
+# =============================
+def get_api_key() -> str | None:
+    # Streamlit Cloud: set in Secrets as GROQ_API_KEY
+    # Local: export GROQ_API_KEY=...
     if "GROQ_API_KEY" in st.secrets:
         return st.secrets["GROQ_API_KEY"]
     return os.getenv("GROQ_API_KEY")
 
 API_KEY = get_api_key()
-BASE_URL = "https://api.groq.com/openai/v1"
+if not API_KEY:
+    st.error("Missing GROQ_API_KEY. Add it in Streamlit Secrets (Cloud) or as an environment variable locally.")
+    st.stop()
+
+# Groq OpenAI-compatible endpoint
+client = OpenAI(
+    api_key=API_KEY,
+    base_url="https://api.groq.com/openai/v1",
+)
+
+# =============================
+# MODEL OPTIONS (UPDATED)
+# =============================
 MODEL_OPTIONS = [
-    "llama-3.1-70b-versatile",
-    "llama-3.1-8b-instant",
-    "mixtral-8x7b-32768",
+    "llama-3.1-70b-versatile",  # best quality
+    "llama-3.1-8b-instant",     # fastest
+    "mixtral-8x7b-32768",       # good alternative
 ]
 
+# =============================
+# LLM CALL
+# =============================
 def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: float = 0.6) -> str:
     resp = client.chat.completions.create(
         model=model,
@@ -32,10 +52,9 @@ def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: floa
     )
     return resp.choices[0].message.content.strip()
 
-
-# -----------------------------
+# =============================
 # ARCHITECTURES
-# -----------------------------
+# =============================
 def run_sequential(model: str, question: str):
     s1 = call_llm(
         model,
@@ -55,13 +74,31 @@ def run_sequential(model: str, question: str):
         s2,
         temperature=0.4,
     )
-    return [("Step 1 — Frame dilemma", s1), ("Step 2 — Pros vs Cons", s2), ("Final — Decision", s3)]
-
+    return [
+        ("Step 1 — Frame dilemma", s1),
+        ("Step 2 — Pros vs Cons", s2),
+        ("Final — Decision", s3),
+    ]
 
 def run_hierarchical(model: str, question: str):
-    e1 = call_llm(model, "You are Expert 1 (Culinary/Flavor logic). Evaluate in 5-7 bullets.", question, temperature=0.5)
-    e2 = call_llm(model, "You are Expert 2 (Culture/Tradition). Evaluate in 5-7 bullets.", question, temperature=0.5)
-    e3 = call_llm(model, "You are Expert 3 (Consumer/Market view). Evaluate in 5-7 bullets.", question, temperature=0.5)
+    e1 = call_llm(
+        model,
+        "You are Expert 1 (Culinary/Flavor logic). Evaluate in 5-7 bullets.",
+        question,
+        temperature=0.5,
+    )
+    e2 = call_llm(
+        model,
+        "You are Expert 2 (Culture/Tradition). Evaluate in 5-7 bullets.",
+        question,
+        temperature=0.5,
+    )
+    e3 = call_llm(
+        model,
+        "You are Expert 3 (Consumer/Market view). Evaluate in 5-7 bullets.",
+        question,
+        temperature=0.5,
+    )
 
     mgr = call_llm(
         model,
@@ -76,12 +113,31 @@ def run_hierarchical(model: str, question: str):
         ("Manager — Final synthesis", mgr),
     ]
 
-
 def run_swarm(model: str, question: str):
-    a = call_llm(model, "You are Agent 1 (Enthusiast). Strongly argue YES. 3-5 lines.", question, temperature=0.7)
-    b = call_llm(model, "You are Agent 2 (Purist). Strongly argue NO. 3-5 lines.", question, temperature=0.7)
-    c = call_llm(model, "You are Agent 3 (Diplomat). Bridge both sides. 3-5 lines.", question, temperature=0.7)
-    d = call_llm(model, "You are Agent 4 (Pragmatist). Focus on real-world choice/market. 3-5 lines.", question, temperature=0.7)
+    a = call_llm(
+        model,
+        "You are Agent 1 (Enthusiast). Strongly argue YES. 3-5 lines.",
+        question,
+        temperature=0.7,
+    )
+    b = call_llm(
+        model,
+        "You are Agent 2 (Purist). Strongly argue NO. 3-5 lines.",
+        question,
+        temperature=0.7,
+    )
+    c = call_llm(
+        model,
+        "You are Agent 3 (Diplomat). Bridge both sides. 3-5 lines.",
+        question,
+        temperature=0.7,
+    )
+    d = call_llm(
+        model,
+        "You are Agent 4 (Pragmatist). Focus on real-world choice/market. 3-5 lines.",
+        question,
+        temperature=0.7,
+    )
 
     agg = call_llm(
         model,
@@ -89,6 +145,7 @@ def run_swarm(model: str, question: str):
         f"Question:\n{question}\n\nEnthusiast:\n{a}\n\nPurist:\n{b}\n\nDiplomat:\n{c}\n\nPragmatist:\n{d}",
         temperature=0.4,
     )
+
     return [
         ("Agent 1 — Enthusiast (YES)", a),
         ("Agent 2 — Purist (NO)", b),
@@ -97,11 +154,12 @@ def run_swarm(model: str, question: str):
         ("Swarm — Aggregated view", agg),
     ]
 
-# -----------------------------
+# =============================
 # UI
-# -----------------------------
-st.title("Agentic AI Orchestration: Live Demo")
+# =============================
+st.title("Agentic AI Orchestration — Live Demo")
 st.caption("Same input → different coordination pattern → different outputs (Sequential • Hierarchical • Swarm)")
+
 model = st.selectbox("Model", MODEL_OPTIONS, index=0)
 
 preset_questions = {
@@ -124,38 +182,44 @@ else:
     st.info(f"Using preset: {question}")
 
 show_steps = st.toggle("Show intermediate steps", value=True)
+
 run = st.button("Run demo", type="primary")
 
 if run:
     col1, col2, col3 = st.columns(3)
 
-    with st.spinner("Running agents..."):
-        t0 = time.time()
-        seq = run_sequential(model, question)
-        hier = run_hierarchical(model, question)
-        swm = run_swarm(model, question)
-        t1 = time.time()
+    try:
+        with st.spinner("Running agents..."):
+            t0 = time.time()
+            seq = run_sequential(model, question)
+            hier = run_hierarchical(model, question)
+            swm = run_swarm(model, question)
+            t1 = time.time()
 
-    st.success(f"Completed in {t1 - t0:.1f}s")
+        st.success(f"Completed in {t1 - t0:.1f}s")
 
-    def render(col, title, items):
-        with col:
-            st.subheader(title)
-            if show_steps:
-                for k, v in items[:-1]:
-                    st.markdown(f"**{k}**")
-                    st.write(v)
-                    st.divider()
-            st.markdown("**Final output**")
-            st.write(items[-1][1])
+        def render(col, title, items):
+            with col:
+                st.subheader(title)
+                if show_steps:
+                    for k, v in items[:-1]:
+                        st.markdown(f"**{k}**")
+                        st.write(v)
+                        st.divider()
+                st.markdown("**Final output**")
+                st.write(items[-1][1])
 
-    render(col1, "Sequential", seq)
-    render(col2, "Hierarchical", hier)
-    render(col3, "Swarm", swm)
+        render(col1, "Sequential", seq)
+        render(col2, "Hierarchical", hier)
+        render(col3, "Swarm", swm)
 
-    st.divider()
-    st.markdown("### What to say (10 seconds)")
-    st.write(
-        "Sequential = step-by-step refinement • Hierarchical = experts in parallel + manager synthesis • "
-        "Swarm = independent viewpoints + aggregated pattern (no forced consensus)."
-    )
+        st.divider()
+        st.markdown("### What to say (10 seconds)")
+        st.write(
+            "Sequential = step-by-step refinement • Hierarchical = experts in parallel + manager synthesis • "
+            "Swarm = independent viewpoints + aggregated pattern (no forced consensus)."
+        )
+
+    except Exception as e:
+        st.error(f"Run failed: {e}")
+        st.info("If this persists, open Streamlit → Manage app → Logs and share the last error block.")
