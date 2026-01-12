@@ -21,12 +21,6 @@ MODEL_OPTIONS = [
     "mixtral-8x7b-32768",
 ]
 
-if not API_KEY:
-    st.error("Missing GROQ_API_KEY. Add it in Streamlit Secrets (Cloud) or as an env var locally.")
-    st.stop()
-
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-
 def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: float = 0.6) -> str:
     resp = client.chat.completions.create(
         model=model,
@@ -38,44 +32,39 @@ def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: floa
     )
     return resp.choices[0].message.content.strip()
 
+
 # -----------------------------
 # ARCHITECTURES
 # -----------------------------
-def run_sequential(question: str):
+def run_sequential(model: str, question: str):
     s1 = call_llm(
+        model,
         "You are Agent A. Frame the core dilemma and what a 'good answer' must consider. 4-6 bullets max.",
         question,
         temperature=0.4,
     )
     s2 = call_llm(
+        model,
         "You are Agent B. Using the framing, list pros and cons. Keep it crisp and balanced.",
         s1,
         temperature=0.4,
     )
     s3 = call_llm(
+        model,
         "You are Agent C. Give a final decision in 3-5 lines. Reference the pros/cons and be practical.",
         s2,
         temperature=0.4,
     )
     return [("Step 1 — Frame dilemma", s1), ("Step 2 — Pros vs Cons", s2), ("Final — Decision", s3)]
 
-def run_hierarchical(question: str):
-    e1 = call_llm(
-        "You are Expert 1 (Culinary/Flavor logic). Evaluate in 5-7 bullets.",
-        question,
-        temperature=0.5,
-    )
-    e2 = call_llm(
-        "You are Expert 2 (Culture/Tradition). Evaluate in 5-7 bullets.",
-        question,
-        temperature=0.5,
-    )
-    e3 = call_llm(
-        "You are Expert 3 (Consumer/Market view). Evaluate in 5-7 bullets.",
-        question,
-        temperature=0.5,
-    )
+
+def run_hierarchical(model: str, question: str):
+    e1 = call_llm(model, "You are Expert 1 (Culinary/Flavor logic). Evaluate in 5-7 bullets.", question, temperature=0.5)
+    e2 = call_llm(model, "You are Expert 2 (Culture/Tradition). Evaluate in 5-7 bullets.", question, temperature=0.5)
+    e3 = call_llm(model, "You are Expert 3 (Consumer/Market view). Evaluate in 5-7 bullets.", question, temperature=0.5)
+
     mgr = call_llm(
+        model,
         "You are the Manager Agent. Synthesize experts into ONE final answer (5-7 lines) + 2 key takeaways.",
         f"Question:\n{question}\n\nExpert 1:\n{e1}\n\nExpert 2:\n{e2}\n\nExpert 3:\n{e3}",
         temperature=0.4,
@@ -87,18 +76,19 @@ def run_hierarchical(question: str):
         ("Manager — Final synthesis", mgr),
     ]
 
-def run_swarm(question: str):
-    a = call_llm("You are Agent 1 (Enthusiast). Strongly argue YES. 3-5 lines.", question, temperature=0.7)
-    b = call_llm("You are Agent 2 (Purist). Strongly argue NO. 3-5 lines.", question, temperature=0.7)
-    c = call_llm("You are Agent 3 (Diplomat). Bridge both sides. 3-5 lines.", question, temperature=0.7)
-    d = call_llm("You are Agent 4 (Pragmatist). Focus on real-world choice/market. 3-5 lines.", question, temperature=0.7)
+
+def run_swarm(model: str, question: str):
+    a = call_llm(model, "You are Agent 1 (Enthusiast). Strongly argue YES. 3-5 lines.", question, temperature=0.7)
+    b = call_llm(model, "You are Agent 2 (Purist). Strongly argue NO. 3-5 lines.", question, temperature=0.7)
+    c = call_llm(model, "You are Agent 3 (Diplomat). Bridge both sides. 3-5 lines.", question, temperature=0.7)
+    d = call_llm(model, "You are Agent 4 (Pragmatist). Focus on real-world choice/market. 3-5 lines.", question, temperature=0.7)
 
     agg = call_llm(
+        model,
         "You are the Swarm Aggregator. Summarize positions in 4 bullets, then state the 'dominant pattern' in 2-3 lines. Do NOT force consensus.",
         f"Question:\n{question}\n\nEnthusiast:\n{a}\n\nPurist:\n{b}\n\nDiplomat:\n{c}\n\nPragmatist:\n{d}",
         temperature=0.4,
     )
-
     return [
         ("Agent 1 — Enthusiast (YES)", a),
         ("Agent 2 — Purist (NO)", b),
@@ -110,8 +100,9 @@ def run_swarm(question: str):
 # -----------------------------
 # UI
 # -----------------------------
-st.title("Agentic AI Orchestration — Live Demo")
+st.title("Agentic AI Orchestration: Live Demo")
 st.caption("Same input → different coordination pattern → different outputs (Sequential • Hierarchical • Swarm)")
+model = st.selectbox("Model", MODEL_OPTIONS, index=0)
 
 preset_questions = {
     "🍍 Pineapple on pizza? (classic)": "Should pineapple go on pizza?",
