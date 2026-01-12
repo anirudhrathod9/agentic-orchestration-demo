@@ -27,9 +27,9 @@ if not API_KEY:
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-def call_llm(system_prompt: str, user_prompt: str, temperature: float = 0.6) -> str:
+def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: float = 0.6) -> str:
     resp = client.chat.completions.create(
-        model=MODEL,
+        model=model,
         temperature=temperature,
         messages=[
             {"role": "system", "content": system_prompt},
