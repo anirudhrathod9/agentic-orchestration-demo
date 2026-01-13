@@ -117,38 +117,37 @@ def run_hierarchical(model: str, question: str):
 
 def run_swarm(model: str, question: str):
     a = call_llm(
-  model,
-  "You are Agent 1 (Enthusiast). Output MUST start with: ✅ YES. Then give 2–4 punchy lines. No bullet points.",
-  question,
-  temperature=0.7
-)
+        model,
+        'FORMAT RULE: Start exactly with "✅ YES —". Then give 2–4 punchy lines. No bullet points.',
+        question,
+        temperature=0.7,
+    )
 
-b = call_llm(
-  model,
-  "You are Agent 2 (Purist). Output MUST start with: ❌ NO. Then give 2–4 punchy lines. No bullet points.",
-  question,
-  temperature=0.7
-)
+    b = call_llm(
+        model,
+        'FORMAT RULE: Start exactly with "❌ NO —". Then give 2–4 punchy lines. No bullet points.',
+        question,
+        temperature=0.7,
+    )
 
-c = call_llm(
-  model,
-  "You are Agent 3 (Diplomat). Output MUST start with: ➖ BOTH. Then give 2–4 punchy lines. No bullet points.",
-  question,
-  temperature=0.7
-)
+    c = call_llm(
+        model,
+        'FORMAT RULE: Start exactly with "➖ BOTH —". Then give 2–4 punchy lines. No bullet points.',
+        question,
+        temperature=0.7,
+    )
 
-d = call_llm(
-  model,
-  "You are Agent 4 (Pragmatist). Output MUST start with: ➖ IT DEPENDS. Then give 2–4 punchy lines focused on real-world choice/market.",
-  question,
-  temperature=0.7
-)
-
+    d = call_llm(
+        model,
+        'FORMAT RULE: Start exactly with "⚖️ IT DEPENDS —". Then give 2–4 punchy lines focused on real-world choice/market.',
+        question,
+        temperature=0.7,
+    )
 
     agg = call_llm(
         model,
-        "You are the Swarm Aggregator. Summarize positions in 4 bullets, then state the 'dominant pattern' in 2-3 lines. Do NOT force consensus.",
-        f"Question:\n{question}\n\nEnthusiast:\n{a}\n\nPurist:\n{b}\n\nDiplomat:\n{c}\n\nPragmatist:\n{d}",
+        "You are the Swarm Aggregator. Summarize each stance in 1 line. Then output a dominant pattern in 2–3 lines. Do NOT force consensus.",
+        f"Question:\n{question}\n\nAgent 1:\n{a}\n\nAgent 2:\n{b}\n\nAgent 3:\n{c}\n\nAgent 4:\n{d}",
         temperature=0.4,
     )
 
@@ -156,9 +155,10 @@ d = call_llm(
         ("Agent 1 — Enthusiast (YES)", a),
         ("Agent 2 — Purist (NO)", b),
         ("Agent 3 — Diplomat (BOTH)", c),
-        ("Agent 4 — Pragmatist (MARKET)", d),
+        ("Agent 4 — Pragmatist (DEPENDS)", d),
         ("Swarm — Aggregated view", agg),
     ]
+
 
 # =============================
 # UI
