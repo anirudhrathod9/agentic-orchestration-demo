@@ -117,29 +117,33 @@ def run_hierarchical(model: str, question: str):
 
 def run_swarm(model: str, question: str):
     a = call_llm(
-        model,
-        "You are Agent 1 (Enthusiast). Strongly argue YES. 3-5 lines.",
-        question,
-        temperature=0.7,
-    )
-    b = call_llm(
-        model,
-        "You are Agent 2 (Purist). Strongly argue NO. 3-5 lines.",
-        question,
-        temperature=0.7,
-    )
-    c = call_llm(
-        model,
-        "You are Agent 3 (Diplomat). Bridge both sides. 3-5 lines.",
-        question,
-        temperature=0.7,
-    )
-    d = call_llm(
-        model,
-        "You are Agent 4 (Pragmatist). Focus on real-world choice/market. 3-5 lines.",
-        question,
-        temperature=0.7,
-    )
+  model,
+  "You are Agent 1 (Enthusiast). Output MUST start with: ✅ YES. Then give 2–4 punchy lines. No bullet points.",
+  question,
+  temperature=0.7
+)
+
+b = call_llm(
+  model,
+  "You are Agent 2 (Purist). Output MUST start with: ❌ NO. Then give 2–4 punchy lines. No bullet points.",
+  question,
+  temperature=0.7
+)
+
+c = call_llm(
+  model,
+  "You are Agent 3 (Diplomat). Output MUST start with: ➖ BOTH. Then give 2–4 punchy lines. No bullet points.",
+  question,
+  temperature=0.7
+)
+
+d = call_llm(
+  model,
+  "You are Agent 4 (Pragmatist). Output MUST start with: ➖ IT DEPENDS. Then give 2–4 punchy lines focused on real-world choice/market.",
+  question,
+  temperature=0.7
+)
+
 
     agg = call_llm(
         model,
