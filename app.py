@@ -173,7 +173,7 @@ preset_questions = {
 
 c1, c2 = st.columns([2, 3])
 with c1:
-    preset = st.selectbox("Pick a preset (recommended for live demo)", list(preset_questions.keys()))
+    preset = st.selectbox("Pick a preset", list(preset_questions.keys()))
 with c2:
     allow_custom = st.toggle("Allow custom question", value=True)
 
