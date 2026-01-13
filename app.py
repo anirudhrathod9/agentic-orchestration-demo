@@ -58,52 +58,58 @@ def call_llm(model: str, system_prompt: str, user_prompt: str, temperature: floa
 def run_sequential(model: str, question: str):
     s1 = call_llm(
         model,
-        "You are Agent A. Frame the core dilemma and what a 'good answer' must consider. 4-6 bullets max.",
+        'FORMAT RULE: Start exactly with "🧩 FRAME —". Then give 4–6 crisp bullets.',
         question,
         temperature=0.4,
     )
+
     s2 = call_llm(
         model,
-        "You are Agent B. Using the framing, list pros and cons. Keep it crisp and balanced.",
+        'FORMAT RULE: Start exactly with "➕ TRADEOFFS —". Then give "Pros:" and "Cons:" with 3–5 bullets each. Keep it tight.',
         s1,
         temperature=0.4,
     )
+
     s3 = call_llm(
         model,
-        "You are Agent C. Give a final decision in 3-5 lines. Reference the pros/cons and be practical.",
+        'FORMAT RULE: Start exactly with "✅ DECISION —". Then give a 3–5 line recommendation + 1 line "When this might NOT apply:".',
         s2,
         temperature=0.4,
     )
+
     return [
         ("Step 1 — Frame dilemma", s1),
         ("Step 2 — Pros vs Cons", s2),
         ("Final — Decision", s3),
     ]
 
+
 def run_hierarchical(model: str, question: str):
     expert1 = call_llm(
         model,
-        "You are Expert 1 (Domain Expert). Clarify the context, key concepts, and the core decision criteria. 5-7 bullets.",
+        'FORMAT RULE: Start exactly with "🧠 DOMAIN —". Then give 5–7 bullets: context + key criteria.',
         question,
         temperature=0.5,
     )
+
     expert2 = call_llm(
         model,
-        "You are Expert 2 (Risks & Constraints). Identify risks, assumptions, constraints, edge cases, and failure modes. 5-7 bullets.",
+        'FORMAT RULE: Start exactly with "⚠️ RISKS —". Then give 5–7 bullets: risks, constraints, edge cases, failure modes.',
         question,
         temperature=0.5,
     )
+
     expert3 = call_llm(
         model,
-        "You are Expert 3 (Stakeholders & Impact). Consider stakeholders, incentives, fairness/ethics, and practical adoption implications. 5-7 bullets.",
+        'FORMAT RULE: Start exactly with "👥 STAKEHOLDERS —". Then give 5–7 bullets: who is affected + incentives + fairness/ethics + adoption.',
         question,
         temperature=0.5,
     )
 
     manager = call_llm(
         model,
-        "You are the Manager Agent. Synthesize the experts into ONE final recommendation (5-7 lines) + 2 key takeaways. Keep it actionable.",
-        f"Question:\n{question}\n\nDomain Expert:\n{expert1}\n\nRisks & Constraints:\n{expert2}\n\nStakeholders & Impact:\n{expert3}",
+        'FORMAT RULE: Start exactly with "👑 MANAGER —". Then produce: (1) Final recommendation in 4–6 lines, (2) 2 key takeaways, (3) 1 open question.',
+        f"Question:\n{question}\n\nDomain:\n{expert1}\n\nRisks:\n{expert2}\n\nStakeholders:\n{expert3}",
         temperature=0.4,
     )
 
@@ -111,8 +117,7 @@ def run_hierarchical(model: str, question: str):
         ("Expert — Domain", expert1),
         ("Expert — Risks & Constraints", expert2),
         ("Expert — Stakeholders & Impact", expert3),
-        ("Manager — Final synthesis", manager),
-    ]
+        ("Manager — Final synthesis", man
 
 
 def run_swarm(model: str, question: str):
