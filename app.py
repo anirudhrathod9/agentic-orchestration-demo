@@ -12,8 +12,6 @@ st.set_page_config(page_title="Agentic AI Orchestration Demo", layout="wide")
 # KEYS / CLIENT
 # =============================
 def get_api_key() -> str | None:
-    # Streamlit Cloud: set in Secrets as GROQ_API_KEY
-    # Local: export GROQ_API_KEY=...
     if "GROQ_API_KEY" in st.secrets:
         return st.secrets["GROQ_API_KEY"]
     return os.getenv("GROQ_API_KEY")
@@ -23,19 +21,17 @@ if not API_KEY:
     st.error("Missing GROQ_API_KEY. Add it in Streamlit Secrets (Cloud) or as an environment variable locally.")
     st.stop()
 
-# Groq OpenAI-compatible endpoint
 client = OpenAI(
     api_key=API_KEY,
     base_url="https://api.groq.com/openai/v1",
 )
 
 # =============================
-# MODEL OPTIONS (UPDATED)
+# MODEL OPTIONS
+# (Keep only models that work for your account)
 # =============================
 MODEL_OPTIONS = [
-    "llama-3.1-70b-versatile",  # best quality
-    "llama-3.1-8b-instant",     # fastest
-    "mixtral-8x7b-32768",       # good alternative
+    "llama-3.1-8b-instant",
 ]
 
 # =============================
@@ -117,7 +113,8 @@ def run_hierarchical(model: str, question: str):
         ("Expert — Domain", expert1),
         ("Expert — Risks & Constraints", expert2),
         ("Expert — Stakeholders & Impact", expert3),
-        ("Manager — Final synthesis", man
+        ("Manager — Final synthesis", manager),
+    ]
 
 
 def run_swarm(model: str, question: str):
@@ -220,9 +217,9 @@ if run:
                 st.markdown("**Final output**")
                 st.write(items[-1][1])
 
-        render(col1, "Sequential", seq)
-        render(col2, "Hierarchical", hier)
-        render(col3, "Swarm", swm)
+        render(col1, "Sequential 🧩", seq)
+        render(col2, "Hierarchical 👑", hier)
+        render(col3, "Swarm 🐝", swm)
 
         st.divider()
         st.markdown("### What to say (10 seconds)")
@@ -234,3 +231,4 @@ if run:
     except Exception as e:
         st.error(f"Run failed: {e}")
         st.info("If this persists, open Streamlit → Manage app → Logs and share the last error block.")
+
