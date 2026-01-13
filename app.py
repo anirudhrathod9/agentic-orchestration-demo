@@ -159,7 +159,7 @@ def run_swarm(model: str, question: str):
 # =============================
 # UI
 # =============================
-st.title("Agentic AI Orchestration — Live Demo")
+st.title("R&C Agentic AI Orchestration: Live Demo")
 st.caption("Same input → different coordination pattern → different outputs (Sequential • Hierarchical • Swarm)")
 
 model = st.selectbox("Model", MODEL_OPTIONS, index=0)
